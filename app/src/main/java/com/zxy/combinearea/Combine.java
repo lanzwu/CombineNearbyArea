@@ -2,6 +2,7 @@ package com.zxy.combinearea;
 
 import android.graphics.Rect;
 import android.util.Log;
+
 import java.util.ArrayList;
 
 /**
@@ -19,6 +20,7 @@ public class Combine {
     private int nextDirection = LEFT;
     private boolean isFirstTime = true;
     private boolean interrupt = false;
+    private boolean quickMode = false;
 
     private ArrayList<Integer> ys = new ArrayList<>();
     private ArrayList<Integer> xs = new ArrayList<>();
@@ -35,11 +37,27 @@ public class Combine {
     private Rect[] rects;
 
 
-    Combine(Rect[] rects,int screenWidth,int screenHeight){
-        if(rects.length != 0) {
+    Combine(Rect[] rects, int areaWidth, int areaHeight) {
+        this(rects, areaWidth, areaHeight, false);
+    }
+
+    Combine(Rect[] rects, int areaWidth, int areaHeight, boolean quickMode) {
+        init(rects, areaWidth, areaHeight, quickMode);
+    }
+
+    public ArrayList<Rect> getResult() {
+        if (refreshAreas.size() != 0) {
+            return refreshAreas;
+        }
+        return null;
+    }
+
+    private void init(Rect[] rects, int areaWidth, int areaHeight, boolean quickMode) {
+        this.quickMode = quickMode;
+        if (rects.length != 0) {
             this.rects = rects;
-        }else{
-            Log.e(TAG,"Rect can't be null !");
+        } else {
+            Log.e(TAG, "Rect can't be null !");
             return;
         }
         for (Rect rect : rects) {
@@ -48,11 +66,11 @@ public class Combine {
             ys.add(rect.top);
             ys.add(rect.bottom);
         }
-        //将屏幕边框加入排序
+        //将区域边框加入排序
         ys.add(0);
-        ys.add(screenHeight);
+        ys.add(areaWidth);
         xs.add(0);
-        xs.add(screenWidth);
+        xs.add(areaHeight);
         bubbleSort(xs);
         bubbleSort(ys);
         xs_size = xs.size();
@@ -61,13 +79,6 @@ public class Combine {
         initAreas();
         double delta = (System.nanoTime() - time) / 1000000.0;
         Log.d(TAG, "Time Cost: " + delta + " ms");
-    }
-
-    public ArrayList<Rect> getResult(){
-        if(refreshAreas.size() != 0) {
-            return refreshAreas;
-        }
-        return null;
     }
 
     private void initAreas() {
@@ -182,6 +193,8 @@ public class Combine {
             if (!interrupt) {
                 //一次循环结束，当前解为最优解
                 minNum = areas.size();
+                refreshAreas.clear();
+                refreshAreas.addAll(areas);
             }
         }
         Log.d(TAG, "areas num : " + areas.size());
@@ -192,8 +205,6 @@ public class Combine {
         for (Node node : currentArea) {
             refreshArea.union(xs.get(node.x), ys.get(node.y), xs.get(node.x + 1), ys.get(node.y + 1));
         }
-        refreshAreas.add(refreshArea);
-        //canvas.drawRect(refreshArea,rectPaint);
         return refreshArea;
     }
 
@@ -272,7 +283,16 @@ public class Combine {
                 return false;
             }
         }
-        return true;
+        if (!quickMode){
+            for (int i = 0; i < nodesSize; i++) {
+                if(nodes.get(i).equals(node)){
+                    if(nodes.get(i).used) {
+                        return false;
+                    }
+                }
+            }
+        }
+            return true;
     }
 
     private Node getFirstUnUsedNode() {
