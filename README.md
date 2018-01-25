@@ -3,7 +3,9 @@
 
 Combine combine = new Combine(Rect[] rects, int areaWidth, int areaHeight);
 Combine combine = new Combine(Rect[] rects, int areaWidth, int areaHeight, boolean quickMode);
+
 参数分别为：
+
 rects：Rect[]类型的参数，代表区域内的不参与合并的矩形区域集合
 
 areaHeight & areaWidth：区域的高度和宽度
